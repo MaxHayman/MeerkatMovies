@@ -1,0 +1,11 @@
+<?php
+
+namespace MeerkatMovies;
+
+class Config {
+	const $url = "";
+	const $cert_file = '';
+	const $cert_password = '';
+	const $cinema_edicode = '';
+	const $cinema_name = '';
+}
