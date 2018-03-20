@@ -83,7 +83,7 @@ class Code {
 		return $response->response['status'] == "VALID";
 	}
 
-	public function unlock() {
+	public function release() {
 
 		$xml = new \SimpleXMLElement("<xmlrequest></xmlrequest>");
 		$xml->addAttribute('type', 'PAYMENTRESULT');
