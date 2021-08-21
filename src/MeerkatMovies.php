@@ -1,5 +1,4 @@
 <?php
-
 /*
  *	Meerkat Movies Rest API Client
  *  Author: Max Hayman <maxhayman@maxhayman.co.uk>
@@ -7,39 +6,44 @@
 
 namespace MeerkatMovies;
 
-require_once('config.php');
-
-class Code {
-
-	private $code;
-	private $film_edicode;
-	private $film_name;
+class MeerkatMovies {
 	
-	public function __construct($code, $film_edicode, $film_name = "") {
-		$this->code = $code;
-		$this->film_edicode = $film_edicode;
-		$this->film_name = $film_name;
+	private $endpoint;
+	private $certificateFile;
+	private $certificatePassword;
+	private $cinemaEdiCode;
+	private $cinemaName;
+	
+	public function __construct($endpoint, $certificateFile, $certificatePassword, $cinemaEdiCode, $cinemaName = null) {
+        $this->endpoint = $endpoint;
+		$this->certificateFile = $certificateFile;
+		$this->certificatePassword = $certificatePassword;
+		$this->cinemaEdiCode = $cinemaEdiCode;
+		$this->cinemaName = $cinemaName;		
 	}
-
-	public function check() {
+	
+	public function check($code) {
 
 		$xml = new \SimpleXMLElement("<xmlrequest></xmlrequest>");
 		$xml->addAttribute('type', 'CHECK');
+		
 		$pin = $xml->addChild('pin');
-		$pin->addAttribute('number', $this->code);
-		$cinema = $xml->addChild('cinema');
-		$cinema->addAttribute('edicode', Config::cinema_edicode);
-
-		if(Config::cinema_name) {
-			$cinema->addAttribute('name', Config::cinema_name);
+		$pin->addAttribute('number', $code->getCode());
+		
+		// Cinema Data
+		$cinema = $xml->addChild('cinema');		
+		$cinema->addAttribute('edicode', $this->cinemaEdiCode);
+		
+		if($this->cinemaName != null) {
+			$cinema->addAttribute('name', $this->cinemaName);
 		}
-
+		
+		// Film Data
 		$film = $xml->addChild('film');
-
-		$film->addAttribute('edicode', $this->film_edicode);
-
-		if($this->film_name) {
-			$film->addAttribute('name', $this->film_name);
+		$film->addAttribute('edicode', $code->getFilmEdiCode());
+		
+		if($code->getFilmName() != null) {
+			$film->addAttribute('name', $code->getFilmName());
 		}
 
 		$response = $this->request($xml);
@@ -51,26 +55,29 @@ class Code {
 
 		return $response->response['status'] == "VALID";
 	}
-
-	public function lock() {
+	
+	public function lock($code) {
 
 		$xml = new \SimpleXMLElement("<xmlrequest></xmlrequest>");
 		$xml->addAttribute('type', 'CHECKANDLOCK');
-		$pin = $xml->addChild('pin');
-		$pin->addAttribute('number', $this->code);
-		$cinema = $xml->addChild('cinema');
-		$cinema->addAttribute('edicode', Config::cinema_edicode);
 		
-		if(Config::cinema_name) {
-			$cinema->addAttribute('name', Config::cinema_name);
+		$pin = $xml->addChild('pin');
+		$pin->addAttribute('number', $code->getCode());
+		
+		// Cinema Data
+		$cinema = $xml->addChild('cinema');		
+		$cinema->addAttribute('edicode', $this->cinemaEdiCode);
+		
+		if($this->cinemaName != null) {
+			$cinema->addAttribute('name', $this->cinemaName);
 		}
-
+		
+		// Film Data
 		$film = $xml->addChild('film');
-
-		$film->addAttribute('edicode', $this->film_edicode);
-
-		if($this->film_name) {
-			$film->addAttribute('name', $this->film_name);
+		$film->addAttribute('edicode', $code->getFilmEdiCode());
+		
+		if($code->getFilmName() != null) {
+			$film->addAttribute('name', $code->getFilmName());
 		}
 
 		$response = $this->request($xml);
@@ -82,13 +89,15 @@ class Code {
 
 		return $response->response['status'] == "VALID";
 	}
-
-	public function release() {
+	
+	public function release($code) {
 
 		$xml = new \SimpleXMLElement("<xmlrequest></xmlrequest>");
 		$xml->addAttribute('type', 'PAYMENTRESULT');
+		
 		$pin = $xml->addChild('pin');
-		$pin->addAttribute('number', $this->code);
+		$pin->addAttribute('number', $code->getCodE());
+		
 		$payment = $xml->addChild('payment');
 		$payment->addAttribute('status', 'INVALID');
 
@@ -101,13 +110,15 @@ class Code {
 
 		return $response->response['status'] == "OK";
 	}
-
-	public function commit() {
+	
+	public function commit($code) {
 
 		$xml = new \SimpleXMLElement("<xmlrequest></xmlrequest>");
 		$xml->addAttribute('type', 'PAYMENTRESULT');
+		
 		$pin = $xml->addChild('pin');
-		$pin->addAttribute('number', $this->code);
+		$pin->addAttribute('number', $code->getCode());
+		
 		$payment = $xml->addChild('payment');
 		$payment->addAttribute('status', 'VALID');
 
@@ -120,16 +131,16 @@ class Code {
 
 		return $response->response['status'] == "OK";
 	}
-
+	
 	private function request($xml) {
 
 		$ch = curl_init();
 
 		$options = array( 
 		    CURLOPT_RETURNTRANSFER => true,		     
-		    CURLOPT_URL => Config::url ,
-		    CURLOPT_SSLCERT => Config::cert_file ,
-		    CURLOPT_SSLCERTPASSWD => Config::cert_password ,
+		    CURLOPT_URL => $this->endpoint,
+		    CURLOPT_SSLCERT => $this->certificateFile,
+		    CURLOPT_SSLCERTPASSWD => $this->certificatePassword,
 			CURLOPT_POSTFIELDS => $xml->asXML() ,
 			
 		);
@@ -144,5 +155,31 @@ class Code {
 		} else {
 		    return new \SimpleXMLElement($output);
 		}
+	}
+	
+}
+
+class Code {
+
+	private $code;
+	private $filmEdiCode;
+	private $filmName;
+	
+	public function __construct($code, $filmEdiCode, $filmName = null) {
+		$this->code = $code;
+		$this->fileEdiCode = $filmEdiCode;
+		$this->filmName = $filmName;
+	}
+	
+	public function getCode() {
+		return $this->code;
+	}
+	
+	public function getFilmEdiCode() {
+		return $this->filmEdiCode;
+	}
+	
+	public function getFilmName() {
+		return $this->filmName;
 	}
 }

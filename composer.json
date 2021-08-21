@@ -1,0 +1,19 @@
+{
+  "name": "maxhayman/meerkatmovies",
+  "description": "An API client for communicating with Meerkat Movies.",
+  "type": "library",
+  "keywords": [
+  ],
+  "homepage": "http://github.com/maxhayman/meerkatmovies",  
+  "authors": [
+    {
+      "name": "Max Hayman",
+      "homepage": "https://github.com/maxhayman"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "MeerkatMovies\\": "src/"
+    }
+  }  
+}
